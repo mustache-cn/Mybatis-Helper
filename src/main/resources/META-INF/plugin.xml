@@ -1,0 +1,111 @@
+<idea-plugin>
+    <id>cn.com.mustache.mybatis.mybatis-helper</id>
+    <name>Mybatis Helper</name>
+    <vendor email="steven@mustache.com.cn" url="https://mustache.com.cn">Mustache Open Source</vendor>
+
+    <description><![CDATA[
+        This is an enhanced plugin for IDEA to support MyBatis, based on previous plugin <b>Free Mybatis Plugin</b>. <br/>
+        here is the main features:</br>
+        <ul>
+            <li>generate mapper xml files</li>
+            <li>navigate from the code to mapper and from the mapper back to code</li>
+            <li>auto code and error tips</li>
+            <li>Restore mybatis/ibatis sql log to original whole executable sql</li>
+            <li>Plugin generate sql statements with replace ? to the really param value</li>
+            <li>Select the console sql log and right click "Restore Sql" menu to restore sql</li>
+            <li>support mybatis generator gui</li>
+            <li>generate swagger model annotation</li>
+        </ul>
+
+        这是一款增强IDEA对mybatis支持的插件，基于之前的插件<b>Free Mybatis Plugin</b>做了修改，主要功能如下：<br/>
+        <ul>
+            <li>生成mapper xml文件</li>
+            <li>快速从代码跳转到mapper及从mapper返回代码</li>
+            <li>mybatis自动补全及语法错误提示</li>
+            <li>还原MyBatis输出的日志为完整的SQL语句</li>
+            <li>把SQL日志里面的?替换为真正的参数值</li>
+            <li>选中要还原的MyBatis日志，右键点击菜单Restore Sql，还原SQL语句</li>
+            <li>集成mybatis generator gui界面</li>
+            <li>根据数据库注解，生成swagger model注解</li>
+        </ul>
+    ]]></description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.database</depends>
+    <depends>com.intellij.spring</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <dom.fileMetaData implementation="cn.com.mustache.mybatis.dom.description.MapperDescription"
+                          rootTagName="mapper"/>
+        <dom.fileMetaData implementation="cn.com.mustache.mybatis.dom.description.ConfigurationDescription"
+                          rootTagName="configuration"/>
+        <definitionsScopedSearch implementation="cn.com.mustache.mybatis.definitionsearch.MapperDefinitionSearch"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.service.JavaService"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.service.AnnotationService"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.service.EditorService"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.alias.AliasFacade"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.locator.MapperLocator"/>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.service.TableInfoService"/>
+        <codeInsight.lineMarkerProvider language="XML"
+                                        implementationClass="cn.com.mustache.mybatis.provider.StatementLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="UAST"
+                                        implementationClass="cn.com.mustache.mybatis.provider.MapperLineMarkerProvider"/>
+        <codeInsight.lineMarkerProvider language="UAST"
+                                        implementationClass="cn.com.mustache.mybatis.provider.InjectionLineMarkerProvider"/>
+        <applicationConfigurable groupId="tools" instance="cn.com.mustache.mybatis.setting.MybatisConfigurable"/>
+        <applicationService serviceImplementation="cn.com.mustache.mybatis.setting.MybatisSetting"/>
+        <completion.contributor language="JAVA"
+                                implementationClass="cn.com.mustache.mybatis.contributor.JavaMenthodCompletionContributor"/>
+        <completion.contributor language="XML"
+                                implementationClass="cn.com.mustache.mybatis.contributor.TestParamContributor"/>
+        <completion.contributor language="SQL"
+                                implementationClass="cn.com.mustache.mybatis.contributor.SqlParamCompletionContributor"
+                                order="first"/>
+        <fileTemplateGroup implementation="cn.com.mustache.mybatis.template.MybatisFileTemplateDescriptorFactory"/>
+        <typedHandler implementation="cn.com.mustache.mybatis.action.MybatisTypedHandler" id="mybatis" order="first"/>
+        <defaultLiveTemplates file="/liveTemplates/sql.xml"/>
+        <refactoring.elementListenerProvider
+                implementation="cn.com.mustache.mybatis.refactoring.MapperRefactoringProvider"/>
+        <localInspection language="JAVA" shortName="MybatisMapperMethodInspection"
+                         displayName="Mapper method inspection" groupName="Mybatis" enabledByDefault="true"
+                         level="ERROR" implementationClass="cn.com.mustache.mybatis.inspection.MapperMethodInspection"/>
+        <localInspection language="XML" shortName="MybatisMapperXmlInspection" enabledByDefault="true" level="ERROR"
+                         displayName="Mapper xml inspection" groupName="Mybatis"
+                         implementationClass="cn.com.mustache.mybatis.inspection.MapperXmlInspection"/>
+        <intentionAction>
+            <className>cn.com.mustache.mybatis.intention.GenerateParamAnnotationIntention</className>
+        </intentionAction>
+        <intentionAction>
+            <className>cn.com.mustache.mybatis.intention.GenerateStatementIntention</className>
+        </intentionAction>
+        <intentionAction order="first">
+            <className>cn.com.mustache.mybatis.intention.GenerateMapperIntention</className>
+        </intentionAction>
+        <projectService serviceImplementation="cn.com.mustache.mybatis.setting.PersistentConfig"/>
+        <projectConfigurable groupId="tools" displayName="Mybatis Generator Setting" id="mybatis.helper.gene.id"
+                             instance="cn.com.mustache.mybatis.setting.MybatisGeneratorConfigurable"/>
+        <spring.customLocalComponentsDiscoverer implementation="cn.com.mustache.mybatis.locator.MapperBeanProvider"/>
+
+        <consoleFilterProvider implementation="cn.com.mustache.mybatis.console.MyBatisLogProvider"/>
+        <toolWindow id="MyBatis Log" secondary="true" icon="/images/logo.svg" anchor="bottom"
+                    factoryClass="cn.com.mustache.mybatis.ui.MyBatisLogToolWindow"/>
+    </extensions>
+
+    <actions>
+        <action id="mybatis-helper-generate-action" class="cn.com.mustache.mybatis.action.MybatisGeneratorMainAction"
+                text="Mybatis-Generator" description="Mybatis generator idea plugin">
+            <add-to-group group-id="DatabaseViewPopupMenu" anchor="first"/>
+        </action>
+        <action class="cn.com.mustache.mybatis.action.RestoreSqlForSelection"
+                id="RestoreSqlAction"
+                text="Restore Sql from Selection"
+                description="Restore Sql from Selection">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ConsoleEditorPopupMenu" anchor="before" relative-to-action="ConsoleView.ClearAll"/>
+        </action>
+    </actions>
+</idea-plugin>
